@@ -1,0 +1,107 @@
+diff --git a/Modules/signalmodule.c b/Modules/signalmodule.c
+index 4f4e6a3..461027e 100644
+--- a/Modules/signalmodule.c
++++ b/Modules/signalmodule.c
+@@ -529,10 +529,14 @@ signal_signal_impl(PyObject *module, int signalnum, PyObject *handler)
+     if (_PyErr_CheckSignalsTstate(tstate)) {
+         return NULL;
+     }
++#ifndef __EMSCRIPTEN__
+     if (PyOS_setsig(signalnum, func) == SIG_ERR) {
+         PyErr_SetFromErrno(PyExc_OSError);
+         return NULL;
+     }
++#else
++    (void)func;
++#endif
+ 
+     old_handler = get_handler(signalnum);
+     set_handler(signalnum, Py_NewRef(handler));
+@@ -1568,6 +1572,18 @@ signal_add_constants(PyObject *module)
+ static int
+ signal_get_set_handlers(signal_state_t *state, PyObject *mod_dict)
+ {
++#ifdef __EMSCRIPTEN__
++    /* Emscripten does not expose a stable host signal table to query here.
++     * Importing _signal must still work, so initialize the Python handler
++     * table to SIG_DFL and let the embedder-driven shared signal buffer
++     * deliver SIGINT into PyErr_SetInterruptEx().
++     */
++    for (int signum = 1; signum < Py_NSIG; signum++) {
++        PyObject *old_func = get_handler(signum);
++        set_handler(signum, Py_NewRef(state->default_handler));
++        Py_XDECREF(old_func);
++    }
++#else
+     // Get signal handlers
+     for (int signum = 1; signum < Py_NSIG; signum++) {
+         void (*c_handler)(int) = PyOS_getsig(signum);
+@@ -1587,6 +1603,7 @@ signal_get_set_handlers(signal_state_t *state, PyObject *mod_dict)
+         set_handler(signum, Py_NewRef(func));
+         Py_XDECREF(old_func);
+     }
++#endif
+ 
+     // Install Python SIGINT handler which raises KeyboardInterrupt
+     PyObject* sigint_func = get_handler(SIGINT);
+@@ -1599,7 +1616,9 @@ signal_get_set_handlers(signal_state_t *state, PyObject *mod_dict)
+ 
+         set_handler(SIGINT, int_handler);
+         Py_DECREF(sigint_func);
++#ifndef __EMSCRIPTEN__
+         PyOS_setsig(SIGINT, signal_handler);
++#endif
+     }
+     return 0;
+ }
+@@ -1907,6 +1926,7 @@ PyErr_SetInterrupt(void)
+ static int
+ signal_install_handlers(void)
+ {
++#ifndef __EMSCRIPTEN__
+ #ifdef SIGPIPE
+     PyOS_setsig(SIGPIPE, SIG_IGN);
+ #endif
+@@ -1915,6 +1935,7 @@ signal_install_handlers(void)
+ #endif
+ #ifdef SIGXFSZ
+     PyOS_setsig(SIGXFSZ, SIG_IGN);
++#endif
+ #endif
+ 
+     // Import _signal to install the Python SIGINT handler
+@@ -1939,6 +1960,7 @@ signal_install_handlers(void)
+ void
+ _Py_RestoreSignals(void)
+ {
++#ifndef __EMSCRIPTEN__
+ #ifdef SIGPIPE
+     PyOS_setsig(SIGPIPE, SIG_DFL);
+ #endif
+@@ -1948,6 +1970,7 @@ _Py_RestoreSignals(void)
+ #ifdef SIGXFSZ
+     PyOS_setsig(SIGXFSZ, SIG_DFL);
+ #endif
++#endif
+ }
+ 
+ 
+diff --git a/Lib/signal.py b/Lib/signal.py
+index c8cd3d4..1fc647b 100644
+--- a/Lib/signal.py
++++ b/Lib/signal.py
+@@ -1,5 +1,13 @@
+ import _signal
+-from _signal import *
++import sys as _sys
++
++if _sys.platform == 'emscripten':
++    for _name, _value in _signal.__dict__.items():
++        if not _name.startswith('_'):
++            globals()[_name] = _value
++    del _name, _value
++else:
++    from _signal import *
+ from enum import IntEnum as _IntEnum
+ 
+ _globals = globals()

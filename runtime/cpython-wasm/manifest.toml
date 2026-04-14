@@ -1,0 +1,14 @@
+cpython_version = "3.12.11"
+runtime_api_version = 1
+emscripten_target_browser = "emscripten-browser"
+emscripten_target_node = "emscripten-node-dl"
+
+[[python_packages]]
+name = "Pillow"
+source_url = "https://files.pythonhosted.org/packages/source/p/pillow/pillow-11.3.0.tar.gz"
+stage_dir = "pillow"
+
+[[python_packages]]
+name = "pycryptodome"
+source_url = "https://files.pythonhosted.org/packages/source/p/pycryptodome/pycryptodome-3.23.0.tar.gz"
+stage_dir = "pycryptodome"

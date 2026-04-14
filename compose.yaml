@@ -1,0 +1,26 @@
+services:
+  dev:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: docker/dev.Dockerfile
+    working_dir: /workspace
+    command: bash -lc "sleep infinity"
+    volumes:
+      - .:/workspace
+
+  cpython-wasm:
+    platform: linux/amd64
+    environment:
+      EMSDK_QUIET: "1"
+    build:
+      context: .
+      dockerfile: runtime/cpython-wasm/Dockerfile
+    working_dir: /workspace
+    command: bash -lc "sleep infinity"
+    volumes:
+      - .:/workspace
+      - emscripten-cache:/emsdk/upstream/emscripten/cache
+
+volumes:
+  emscripten-cache:

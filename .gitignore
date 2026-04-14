@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+.venv/
+.tmp/
+__pycache__/
+*.pyc
+runtime/cpython-wasm/artifacts/
+runtime/cpython-wasm/build/
+runtime/cpython-wasm/dist/
+runtime/cpython-wasm/vendor/

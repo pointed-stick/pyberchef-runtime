@@ -1,0 +1,17 @@
+{
+  "name": "pyberchef-runtime",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "runtime:fetch": "docker compose run --rm cpython-wasm ./runtime/cpython-wasm/scripts/fetch-all.sh",
+    "runtime:fetch-libffi": "docker compose run --rm cpython-wasm ./runtime/cpython-wasm/scripts/fetch-libffi.sh",
+    "runtime:fetch-browser-support": "docker compose run --rm cpython-wasm ./runtime/cpython-wasm/scripts/fetch-browser-support.sh",
+    "runtime:build-libffi": "docker compose run --rm cpython-wasm ./runtime/cpython-wasm/scripts/build-libffi.sh",
+    "runtime:build-host": "docker compose run --rm cpython-wasm ./runtime/cpython-wasm/scripts/build-host-python.sh",
+    "runtime:build-browser": "docker compose run --rm cpython-wasm ./runtime/cpython-wasm/scripts/build-browser.sh",
+    "runtime:build-node": "docker compose run --rm cpython-wasm ./runtime/cpython-wasm/scripts/build-node.sh",
+    "runtime:build-browser-packages": "docker compose run --rm cpython-wasm ./runtime/cpython-wasm/scripts/build-browser-packages.sh",
+    "runtime:package": "docker compose run --rm dev bash -lc 'node ./runtime/cpython-wasm/scripts/package-runtime.mjs'"
+  }
+}
